@@ -16,10 +16,11 @@ import javax.swing.JPanel;
 
 public class SimpleBanner extends JApplet implements ActionListener {
 	ArrayList<JButton> buttons = new ArrayList<JButton>();
+	ArrayList<String> search = new ArrayList<String>();
 	JButton button;
 	Color red;
 	Container cp = getContentPane();
-	int col =3 ;
+	int col =10 ;
 	int row =3 ;
 	  public void init() 
 	  {
@@ -29,7 +30,7 @@ public class SimpleBanner extends JApplet implements ActionListener {
 		  int y[] = {0,200,200,400,500};
 		  jp.setLayout(null);
 		  for(int i =0;i< 5;i++){
-			  jp.add(getSector(x[i],y[i], 200, 200,name[i] ,3,3));
+			  jp.add(getSector(x[i],y[i], 200, 200,name[i] ,col,row));
 		  }
 		  /*
 		  JPanel jp= new JPanel();
@@ -80,6 +81,7 @@ public class SimpleBanner extends JApplet implements ActionListener {
 	    		button =new JButton(name+i);
 	    		buttons.add(button);
 	    		jp.add(button);
+	    		search.add(name+i);
 	    		button.setBackground(Color.green);
 				button.addActionListener(this);				
 	    	
@@ -89,23 +91,14 @@ public class SimpleBanner extends JApplet implements ActionListener {
 	  
 	  
 	  public void actionPerformed(ActionEvent e) 
-	  {			
-		 StringBuffer string = new StringBuffer(e.getActionCommand());
-		 System.out.print(string);
-		 String sector = new String(""+string.charAt(0));
-		 string =	 string.deleteCharAt(0);
-		 
-		 if (sector.endsWith("a"))
-		 {
-			 JButton button = buttons.get(Integer.parseInt(string.toString())-1);
-			 button.setBackground(Color.red);
-			 System.out.println("sector = "+sector);
-		 }
-		 else
-		 {
-			 JButton button = buttons.get((row*col)+Integer.parseInt(string.toString())-1);	
-			 button.setBackground(Color.red);		 
-		 }
+	  {	
+
+		  search.indexOf(e.getActionCommand());
+		  System.out.println(search.indexOf(e.getActionCommand()));
+		  buttons.get(search.indexOf(e.getActionCommand())).setBackground(Color.RED);
+		  //button.setBackground(Color.red);
+		  
+		  
 	  }
 	  public static void main(String[] args) {
 		  
@@ -184,4 +177,24 @@ public class SimpleBanner extends Applet implements Runnable {
   public void paint(Graphics g) {
     g.drawString(msg, 50, 30);
   }
+}*/
+
+
+
+/*
+StringBuffer string = new StringBuffer(e.getActionCommand());
+System.out.print(string);
+String sector = new String(""+string.charAt(0));
+string =	 string.deleteCharAt(0);
+
+if (sector.endsWith("a"))
+{
+	 JButton button = buttons.get(Integer.parseInt(string.toString())-1);
+	 button.setBackground(Color.red);
+	 System.out.println("sector = "+sector);
+}
+else
+{
+	 JButton button = buttons.get((row*col)+Integer.parseInt(string.toString())-1);	
+	 button.setBackground(Color.red);		 
 }*/
