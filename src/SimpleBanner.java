@@ -3,6 +3,7 @@
 содержащегося в переменой msg.
 */
 
+import java.awt.Button;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
@@ -27,18 +28,21 @@ public class SimpleBanner extends JApplet implements ActionListener {
 	ArrayList<JButton> buttons = new ArrayList<JButton>();
 	ArrayList<String> search = new ArrayList<String>();
 	ArrayList<Sector> sectors = new ArrayList<>();
-//	ArrayList<>
+	int area_id;
+	Statement st =null;
+
 	Connection c = null;
 	JButton button;
 	Color red;
 	Container cp = getContentPane();
 	  public void init() 
 	  {
+		  area_id = 28;
 		  try {
 			Class.forName("com.mysql.jdbc.Driver");	
 			c = DriverManager.getConnection("jdbc:mysql://localhost/sitea", "root", "");
-			Statement st = c.createStatement();
-			rs = st.executeQuery("Select * FROM sector WHERE id_area = 28");
+			st = c.createStatement();
+			rs = st.executeQuery("Select * FROM sector WHERE id_area = "+area_id);
 			while(rs.next()){
 				sectors.add(new Sector(rs.getString("Name"),rs.getInt("RowCount"),rs.getInt("ColCount"),
 						2.5*rs.getInt("positionX"),2.5*rs.getInt("positionY"), rs.getBoolean("scene"),
@@ -55,7 +59,8 @@ System.out.println(sectors.size());
 		  jp.setLayout(null);
 		  for(int i =0;i< sectors.size();i++){
 			  Sector sector = sectors.get(i);
-			  jp.add(getSector((int)sector.x,(int)sector.y,(int)sector.wi,(int)sector.he,sector.SectorName ,(int)sector.col,(int)sector.row,sector.scene,sector.Sector_id));
+			  jp.add(getSector((int)sector.x,(int)sector.y,(int)sector.wi,(int)sector.he,sector.SectorName ,
+					  		   (int)sector.col,(int)sector.row,sector.scene,sector.Sector_id));
 		  }
 
 		  cp.add(jp);
@@ -87,23 +92,40 @@ System.out.println(sectors.size());
 		  }
 	  }
 	  
-	  private JPanel getSector(int x,int y,int width, int height,String name,int row, int col, boolean scene, int Sector_id) 
+	  private JPanel getSector(int x,int y,int width, int height,String name,
+			  				   int row, int col, boolean scene, int Sector_id) 
 	  {
 		  JPanel jp= new JPanel();
 
 		  jp.setBackground(Color.BLUE);	
 		  jp.setBounds(x, y, width, height);
 		  jp.setLayout(new GridLayout(row,col));
-		  
+		  ArrayList<Integer> mas =new ArrayList<>();
+		  try {
+			  String sql= "Select * FROM bought_place WHERE area_id = "+area_id+" and Sector_id = "+Sector_id;
+			  System.out.println(sql);
+			rs = st.executeQuery(sql);
+		    while(rs.next()){
+		    	mas.add(rs.getInt("row_number")*rs.getInt("col_number"));
+		  }
+		  } catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		  for(int i = 1; i <=row*col && scene!=true; i++)
 	    	{
 	    		button =new JButton(name+i);
 	    		buttons.add(button);
 	    		jp.add(button);
 	    		search.add(name+i);
-	    		button.setBackground(Color.green);
 	    		button.setFont(new Font("Arial",Font.CENTER_BASELINE,10));
-				button.addActionListener(this);				
+	    		if(mas.indexOf(i)<0){
+	    			button.setBackground(Color.green);
+	    			button.addActionListener(this);	
+	    		}
+				else{
+					button.setBackground(Color.red);
+				}
 	    	}
 		
 		  return jp;
@@ -112,38 +134,37 @@ System.out.println(sectors.size());
 	  
 	  public void actionPerformed(ActionEvent e) 
 	  {		  
-	//	  int ind = search.indexOf(e.getActionCommand());
+		  int ind = search.indexOf(e.getActionCommand());
 		  
-//		  if(buttons.get(ind).getCo)
-
-		  
-		  String str1 = new StringBuffer(e.getActionCommand()).substring(1);//get position
-		  int position = Integer.parseInt(str1);							//
-		
-		  Sector sector = null;
-		  for(int i=0;i< sectors.size();i++){
-			  String str=e.getActionCommand();
-			  sector = sectors.get(i);
-			  if(sector.SectorName.equals(""+str.charAt(0)))
-				 break;
-		  }
+		  if(buttons.get(ind).getBackground() != Color.red){
+	
+			  
+			  String str1 = new StringBuffer(e.getActionCommand()).substring(1);//get position
+			  int position = Integer.parseInt(str1);							//
 			
-		  int col = (int) (position%sector.row);
-		  int row = (int)(position/sector.row)+1;
-		  buttons.get(search.indexOf(e.getActionCommand())).setBackground(Color.RED);
-		  String sql="INSERT INTO bought_place(" +
-		  		"id,Sector_id,row_number,col_number,user_card,user_name,user_phone) VALUES " +
-		  		"(null,"+sector.Sector_id+","+row+","+col+",123,123,123123)";
-		  PreparedStatement pst;
-		  try {
-			 pst = c.prepareStatement(sql);
-			 int prs = pst.executeUpdate(sql);
-		  } catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			System.out.println(e1.toString());
-		  }//? - это параметр
-		
-		    //button.setBackground(Color.red);
+			  Sector sector = null;
+			  for(int i=0;i< sectors.size();i++){
+				  String str=e.getActionCommand();
+				  sector = sectors.get(i);
+				  if(sector.SectorName.equals(""+str.charAt(0)))
+					 break;
+			  }
+				new Button().getBackground();
+			  int col = (int) (position%sector.row);
+			  int row = (int)(position/sector.row)+1;
+			  buttons.get(search.indexOf(e.getActionCommand())).setBackground(Color.RED);
+			  String sql="INSERT INTO bought_place(" +
+			  		"id,area_id,Sector_id,row_number,col_number,user_card,user_name,user_phone) VALUES " +
+			  		"(null,"+area_id+","+sector.Sector_id+","+row+","+col+",123,123,123123)";
+			  PreparedStatement pst;
+			  try {
+				 pst = c.prepareStatement(sql);
+				 int prs = pst.executeUpdate(sql);
+			  } catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				System.out.println(e1.toString());
+			  }
+	       }
 		  
 		  
 	  }
