@@ -5,9 +5,15 @@
 
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 import javax.swing.JApplet;
@@ -15,77 +21,96 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 public class SimpleBanner extends JApplet implements ActionListener {
+
+	
+	
+	//Connection con = DataSource.getConnection("user,",);
+	ResultSet rs =null;
 	ArrayList<JButton> buttons = new ArrayList<JButton>();
 	ArrayList<String> search = new ArrayList<String>();
+	ArrayList<Sector> sectors = new ArrayList<>();
+	Connection c = null;
 	JButton button;
 	Color red;
 	Container cp = getContentPane();
-	int col =10 ;
-	int row =3 ;
 	  public void init() 
 	  {
+		  try {
+			Class.forName("com.mysql.jdbc.Driver");	
+			c = DriverManager.getConnection("jdbc:mysql://localhost/site", "root", "");
+			Statement st = c.createStatement();
+			rs = st.executeQuery("Select * FROM sector WHERE id_area = 28");
+			while(rs.next()){
+				sectors.add(new Sector(rs.getString("Name"),rs.getInt("RowCount"),rs.getInt("ColCount"),
+						2.5*rs.getInt("positionX"),2.5*rs.getInt("positionY"), rs.getBoolean("scene"),
+						2.5*rs.getInt("Width"),2.5*rs.getInt("Height"),rs.getInt("id")));
+           
+			}
+		} catch (SQLException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+System.out.println(sectors.size());
+			
 		  JPanel jp= new JPanel();
-		  String name[]={"a","b","c","d","e"};
-		  int x[] = {0,400,200,300,500};
-		  int y[] = {0,200,200,400,500};
-		  jp.setLayout(null);
-		  for(int i =0;i< 5;i++){
-			  jp.add(getSector(x[i],y[i], 200, 200,name[i] ,col,row));
-		  }
-		  /*
-		  JPanel jp= new JPanel();
-		  JPanel jp1= new JPanel();
-		  JPanel jp2= new JPanel();
-
-		  jp1.setBackground(Color.BLUE);	
-		  jp1.setBounds(100, 100, 350, 350);
-
-		  jp2.setBackground(Color.BLUE);	
-		  jp2.setBounds(500, 500, 350, 350);
-		  jp.add(jp2);
-		  jp.add(jp1);
 		  
 		  jp.setLayout(null);
-		  jp1.setLayout(new GridLayout(row,col));
-		  for(int i = 1; i <=row*col; i++)
-	    	{
-	    		button =new JButton("A"+i);
-	    		buttons.add(button);
-	    		jp1.add(button);
-	    		button.setBackground(Color.green);
-				button.addActionListener(this);				
-	    	
-	    	}
-		  jp2.setLayout(new GridLayout(row,col));
-		  for(int i = 1; i <=row*col; i++)
-	    	{
-	    		button =new JButton("B"+i);
-	    		buttons.add(button);
-	    		jp2.add(button);
-	    		button.setBackground(Color.green);
-				button.addActionListener(this);				
-	    	
-	    	}*/
+		  for(int i =0;i< sectors.size();i++){
+			  Sector sector = sectors.get(i);
+			  jp.add(getSector((int)sector.x,(int)sector.y,(int)sector.wi,(int)sector.he,sector.SectorName ,(int)sector.col,(int)sector.row,sector.scene,sector.Sector_id));
+		  }
+
 		  cp.add(jp);
 	  }	  
 	  
-	  private JPanel getSector(int x,int y,int width, int height,String name,int row, int col) 
+	  public class Sector
+	  {
+		  int Sector_id;
+		  String SectorName ;
+		  double row;
+		  double col;
+		  double x;
+		  double y;
+		  boolean scene = false;
+		  double wi;
+		  double he;
+		  
+		  public Sector(String SectorName,double row, double col,double x, double y, boolean scene,double wi,double he, int Sector_id)
+		  {
+			  this.Sector_id=Sector_id;
+			  this.SectorName=SectorName;
+			  this.row=row;
+			  this.col=col;
+			  this.x=x;
+			  this.y=y;
+			  this.scene=scene;
+			  this.wi=wi;
+			  this.he=he;
+		  }
+	  }
+	  
+
+	  
+	  private JPanel getSector(int x,int y,int width, int height,String name,int row, int col, boolean scene, int Sector_id) 
 	  {
 		  JPanel jp= new JPanel();
 
 		  jp.setBackground(Color.BLUE);	
 		  jp.setBounds(x, y, width, height);
 		  jp.setLayout(new GridLayout(row,col));
-		  for(int i = 1; i <=row*col; i++)
+		  
+		  for(int i = 1; i <=row*col && scene!=true; i++)
 	    	{
 	    		button =new JButton(name+i);
 	    		buttons.add(button);
 	    		jp.add(button);
 	    		search.add(name+i);
 	    		button.setBackground(Color.green);
+	    		button.setFont(new Font("Arial",Font.CENTER_BASELINE,10));
 				button.addActionListener(this);				
 	    	
 	    	}
+		
 		  return jp;
 	  }
 	  
@@ -94,107 +119,32 @@ public class SimpleBanner extends JApplet implements ActionListener {
 	  {	
 
 		  search.indexOf(e.getActionCommand());
-		  System.out.println(search.indexOf(e.getActionCommand()));
+		//  System.out.println(search.indexOf(e.getActionCommand()));
+		  String str1 = new StringBuffer(e.getActionCommand()).substring(1);
+		  int position = Integer.parseInt(str1);
+			 int i =0;
+			 int index = 0;
+			 Sector sector = null;
+			 while(i< sectors.size()){
+				 String str=e.getActionCommand();
+				 
+				 sector = sectors.get(i);
+				 if(sector.SectorName.equals("B")) break;
+				 i++;
+			 }
+			
+			 int col = (int) (position%sector.row);
+			 int row = (int)(position/sector.row)+1;
+			 System.out.println("sector"+sector.SectorName+"col ="+col+"row="+row);
 		  buttons.get(search.indexOf(e.getActionCommand())).setBackground(Color.RED);
-		  //button.setBackground(Color.red);
+		 //rs = st.executeQuery("INSERT INTO bought_place(`id`,`Sector_id`, `row_number`, `col_number`, `user_card`, `user_name`, `user_phone`) VALUES ([value-1],[value-2],[value-3],[value-4],[value-5],[value-6],[value-7])
+		//			");
+		    //button.setBackground(Color.red);
 		  
 		  
 	  }
 	  public static void main(String[] args) {
-		  
+		 
 	  }
-	}  ///:~
-/*public class SimpleBanner extends JApplet {
-  JButton b1 = new JButton("Button 1"),  b2 = new JButton("Button 2");
-  public void init() {
-    Container cp = getContentPane();
-    cp.setLayout(new FlowLayout());
-    cp.add(b1);
-    cp.add(b2);
-	b1.setBackground(Color.PINK);
-	b1.setVisible(true);
-	b1.setBounds(10, 50, 500, 20);
-	//b1.addActionListener((ActionListener) this);
-  }
-  public static void main(String[] args) {
-   // Console.run(new SimpleBanner(), 200, 50);
-  }
-} ///:~*/
-
-
-
-
-
-
-
-/*
-public class SimpleBanner extends Applet implements Runnable {
-  String msg = " A Simple Moving Banner.";
-  Thread t = null;
-  
-  // Установка цветов и инициализация потока
-  public void init() {
-    setBackground(Color.cyan);
-    setForeground(Color.red);
-    t = new Thread(this);
-    t.start(); // Запуск потока
-    t.suspend();
-  }
-    // Ожидание завершения инициализации потока.
-   
-  // Продолжение работы потока.
-  public void start() {
-    t.resume();
-  }
-  
-  public void run() {
-    char ch;
-   // Бесконечный вывод заголовка на экран.
-   for( ; ; ) {
-      try {
-        repaint();
-        Thread.sleep(250);
-        ch = msg.charAt(0);
-        msg = msg.substring(1, msg.length());
-      msg += ch;
-       } catch(InterruptedException e){}
-    }
-   }
-  // Пауза.
-  public void stop() {
-    t.suspend();
-  }
-  
-  // Остановка потока при завершении аплета.
-  public void destroy() {
-    if(t != null) {
-      t.stop();
-      t = null;
-    }
-  }
-
-  // Отображение заголовка на экране.
-  public void paint(Graphics g) {
-    g.drawString(msg, 50, 30);
-  }
-}*/
-
-
-
-/*
-StringBuffer string = new StringBuffer(e.getActionCommand());
-System.out.print(string);
-String sector = new String(""+string.charAt(0));
-string =	 string.deleteCharAt(0);
-
-if (sector.endsWith("a"))
-{
-	 JButton button = buttons.get(Integer.parseInt(string.toString())-1);
-	 button.setBackground(Color.red);
-	 System.out.println("sector = "+sector);
-}
-else
-{
-	 JButton button = buttons.get((row*col)+Integer.parseInt(string.toString())-1);	
-	 button.setBackground(Color.red);		 
-}*/
+	  
+}  
