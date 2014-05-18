@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -22,13 +23,11 @@ import javax.swing.JPanel;
 
 public class SimpleBanner extends JApplet implements ActionListener {
 
-	
-	
-	//Connection con = DataSource.getConnection("user,",);
 	ResultSet rs =null;
 	ArrayList<JButton> buttons = new ArrayList<JButton>();
 	ArrayList<String> search = new ArrayList<String>();
 	ArrayList<Sector> sectors = new ArrayList<>();
+//	ArrayList<>
 	Connection c = null;
 	JButton button;
 	Color red;
@@ -37,14 +36,13 @@ public class SimpleBanner extends JApplet implements ActionListener {
 	  {
 		  try {
 			Class.forName("com.mysql.jdbc.Driver");	
-			c = DriverManager.getConnection("jdbc:mysql://localhost/site", "root", "");
+			c = DriverManager.getConnection("jdbc:mysql://localhost/sitea", "root", "");
 			Statement st = c.createStatement();
 			rs = st.executeQuery("Select * FROM sector WHERE id_area = 28");
 			while(rs.next()){
 				sectors.add(new Sector(rs.getString("Name"),rs.getInt("RowCount"),rs.getInt("ColCount"),
 						2.5*rs.getInt("positionX"),2.5*rs.getInt("positionY"), rs.getBoolean("scene"),
-						2.5*rs.getInt("Width"),2.5*rs.getInt("Height"),rs.getInt("id")));
-           
+						2.5*rs.getInt("Width"),2.5*rs.getInt("Height"),rs.getInt("id")));       
 			}
 		} catch (SQLException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -89,8 +87,6 @@ System.out.println(sectors.size());
 		  }
 	  }
 	  
-
-	  
 	  private JPanel getSector(int x,int y,int width, int height,String name,int row, int col, boolean scene, int Sector_id) 
 	  {
 		  JPanel jp= new JPanel();
@@ -108,7 +104,6 @@ System.out.println(sectors.size());
 	    		button.setBackground(Color.green);
 	    		button.setFont(new Font("Arial",Font.CENTER_BASELINE,10));
 				button.addActionListener(this);				
-	    	
 	    	}
 		
 		  return jp;
@@ -116,29 +111,38 @@ System.out.println(sectors.size());
 	  
 	  
 	  public void actionPerformed(ActionEvent e) 
-	  {	
+	  {		  
+	//	  int ind = search.indexOf(e.getActionCommand());
+		  
+//		  if(buttons.get(ind).getCo)
 
-		  search.indexOf(e.getActionCommand());
-		//  System.out.println(search.indexOf(e.getActionCommand()));
-		  String str1 = new StringBuffer(e.getActionCommand()).substring(1);
-		  int position = Integer.parseInt(str1);
-			 int i =0;
-			 int index = 0;
-			 Sector sector = null;
-			 while(i< sectors.size()){
-				 String str=e.getActionCommand();
-				 
-				 sector = sectors.get(i);
-				 if(sector.SectorName.equals("B")) break;
-				 i++;
-			 }
+		  
+		  String str1 = new StringBuffer(e.getActionCommand()).substring(1);//get position
+		  int position = Integer.parseInt(str1);							//
+		
+		  Sector sector = null;
+		  for(int i=0;i< sectors.size();i++){
+			  String str=e.getActionCommand();
+			  sector = sectors.get(i);
+			  if(sector.SectorName.equals(""+str.charAt(0)))
+				 break;
+		  }
 			
-			 int col = (int) (position%sector.row);
-			 int row = (int)(position/sector.row)+1;
-			 System.out.println("sector"+sector.SectorName+"col ="+col+"row="+row);
+		  int col = (int) (position%sector.row);
+		  int row = (int)(position/sector.row)+1;
 		  buttons.get(search.indexOf(e.getActionCommand())).setBackground(Color.RED);
-		 //rs = st.executeQuery("INSERT INTO bought_place(`id`,`Sector_id`, `row_number`, `col_number`, `user_card`, `user_name`, `user_phone`) VALUES ([value-1],[value-2],[value-3],[value-4],[value-5],[value-6],[value-7])
-		//			");
+		  String sql="INSERT INTO bought_place(" +
+		  		"id,Sector_id,row_number,col_number,user_card,user_name,user_phone) VALUES " +
+		  		"(null,"+sector.Sector_id+","+row+","+col+",123,123,123123)";
+		  PreparedStatement pst;
+		  try {
+			 pst = c.prepareStatement(sql);
+			 int prs = pst.executeUpdate(sql);
+		  } catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			System.out.println(e1.toString());
+		  }//? - это параметр
+		
 		    //button.setBackground(Color.red);
 		  
 		  
